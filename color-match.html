@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Match Game</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #1e1e3f;
+        }
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="600" height="800"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game variables
+        const WIDTH = canvas.width;
+        const HEIGHT = canvas.height;
+        const COLORS = ["#FF0000", "#00FF00", "#0000FF", "#FFFF00"];  // RED, GREEN, BLUE, YELLOW
+        let squareSize = 200;
+        let ballRadius = 20;
+        let ballSpeed = 5;
+        let score = 0;
+        let highscore = 0;
+        let gameOver = false;
+        let rotationAngle = 0;
+        let ballColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+        let ballX = WIDTH / 2;
+        let ballY = -ballRadius;
+        let squareColors = COLORS;
+        let squareCenter = [WIDTH / 2, HEIGHT * 5 / 6]; // Square at the bottom
+        let snowflakes = [];
+        let ballParticles = [];
+        let particles = [];
+
+        // Snowflakes effect
+        function generateSnowflakes() {
+            if (Math.random() < 0.1) {
+                snowflakes.push({
+                    pos: [Math.random() * WIDTH, 0],
+                    velocity: [Math.random() * 4 - 2, Math.random() * 3 + 1],
+                    size: Math.random() * 3 + 3,
+                });
+            }
+        }
+
+        function drawSnowflakes() {
+            for (let i = 0; i < snowflakes.length; i++) {
+                let snowflake = snowflakes[i];
+                ctx.beginPath();
+                ctx.arc(snowflake.pos[0], snowflake.pos[1], snowflake.size, 0, Math.PI * 2);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+                snowflake.pos[0] += snowflake.velocity[0];
+                snowflake.pos[1] += snowflake.velocity[1];
+                if (snowflake.pos[1] > HEIGHT) {
+                    snowflakes.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+
+        // Ball particles effect
+        function generateBallParticles() {
+            for (let i = 0; i < 5; i++) {
+                ballParticles.push({
+                    pos: [ballX, ballY],
+                    velocity: [Math.random() * 4 - 2, Math.random() * -2 - 1],
+                    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+                    size: Math.random() * 3 + 3,
+                });
+            }
+        }
+
+        function drawBallParticles() {
+            for (let i = 0; i < ballParticles.length; i++) {
+                let particle = ballParticles[i];
+                ctx.beginPath();
+                ctx.arc(particle.pos[0], particle.pos[1], particle.size, 0, Math.PI * 2);
+                ctx.fillStyle = particle.color;
+                ctx.fill();
+                particle.pos[0] += particle.velocity[0];
+                particle.pos[1] += particle.velocity[1];
+                particle.size = Math.max(1, particle.size - 0.1);
+                if (particle.size <= 0) {
+                    ballParticles.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+
+        // Background functions
+        function drawGradient() {
+            for (let i = 0; i < HEIGHT; i++) {
+                let color = `rgb(${30 + i / 20}, ${30 + i / 20}, ${60 + i / 10})`;
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(WIDTH, i);
+                ctx.strokeStyle = color;
+                ctx.stroke();
+            }
+        }
+
+        function drawStaticStars() {
+            ctx.fillStyle = "white";
+            for (let i = 0; i < 50; i++) {
+                let starX = Math.random() * WIDTH;
+                let starY = Math.random() * HEIGHT;
+                ctx.beginPath();
+                ctx.arc(starX, starY, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawDynamicStars() {
+            ctx.fillStyle = "white";
+            for (let i = 0; i < 50; i++) {
+                let starX = Math.random() * WIDTH;
+                let starY = Math.random() * HEIGHT;
+                ctx.beginPath();
+                ctx.arc(starX, starY, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Draw square with rotation
+        function drawSquare() {
+            const center = squareCenter;
+            const halfSize = squareSize / 2;
+
+            let corners = [
+                [center[0] - halfSize, center[1] - halfSize],
+                [center[0] + halfSize, center[1] - halfSize],
+                [center[0] + halfSize, center[1] + halfSize],
+                [center[0] - halfSize, center[1] + halfSize],
+            ];
+
+            let rotatedCorners = corners.map(([x, y]) => {
+                let radAngle = Math.radians(rotationAngle);
+                let relX = x - center[0];
+                let relY = y - center[1];
+                let rotatedX = relX * Math.cos(radAngle) - relY * Math.sin(radAngle);
+                let rotatedY = relX * Math.sin(radAngle) + relY * Math.cos(radAngle);
+                return [center[0] + rotatedX, center[1] + rotatedY];
+            });
+
+            for (let i = 0; i < 4; i++) {
+                let nextI = (i + 1) % 4;
+                ctx.beginPath();
+                ctx.moveTo(center[0], center[1]);
+                ctx.lineTo(rotatedCorners[i][0], rotatedCorners[i][1]);
+                ctx.lineTo(rotatedCorners[nextI][0], rotatedCorners[nextI][1]);
+                ctx.closePath();
+                ctx.fillStyle = squareColors[i];
+                ctx.fill();
+            }
+        }
+
+        // Ball movement and drawing
+        function drawBall() {
+            generateBallParticles();
+            drawBallParticles();
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+            ctx.fillStyle = ballColor;
+            ctx.fill();
+        }
+
+        // Game loop
+        function gameLoop() {
+            ctx.clearRect(0, 0, WIDTH, HEIGHT); // Clear the canvas
+
+            generateSnowflakes();
+            drawBackground();
+            drawSnowflakes();
+            drawBall();
+            drawSquare();
+
+            // Ball falls down
+            ballY += ballSpeed;
+
+            // Check collision with the square
+            if (ballY + ballRadius >= squareCenter[1] - squareSize / 2) {
+                if (ballColor === squareColors[0]) {
+                    score++;
+                    ballSpeed += 0.5;
+                } else {
+                    gameOver = true;
+                }
+            }
+
+            // Score and Game Over
+            ctx.fillStyle = "black";
+            ctx.font = "24px Arial";
+            ctx.fillText("Score: " + score, 10, 30);
+            ctx.fillText("Highscore: " + highscore, 10, 60);
+
+            if (gameOver) {
+                ctx.fillText("Game Over! Press ESC to Retry", WIDTH / 2 - 100, HEIGHT / 2);
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Event listener for keys
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowLeft') {
+                rotationAngle -= 90;
+            } else if (event.key === 'ArrowRight') {
+                rotationAngle += 90;
+            } else if (event.key === 'Escape') {
+                gameOver = false;
+                score = 0;
+                ballSpeed = 5;
+                ballY = -ballRadius;
+                ballX = WIDTH / 2;
+            }
+        });
+
+        // Start the game
+        gameLoop();
+
+        // Utility function to convert degrees to radians
+        Math.radians = function(degrees) {
+            return degrees * Math.PI / 180;
+        };
+    </script>
+</body>
+</html>
