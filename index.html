@@ -16,12 +16,29 @@
             margin: 20px auto;
             border: 2px solid #000;
         }
+
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        h1 {
+            font-size: 36px;
+        }
     </style>
 </head>
 <body>
     <h1>Color Match Game</h1>
     <p>Viel Spaß beim Spielen!</p>
+    <!-- Start Game Button -->
+    <button onclick="startGame()">Start Game</button>
+    
+    <!-- Canvas für das Spiel -->
     <canvas id="gameCanvas" width="600" height="800"></canvas>
+
+    <!-- Einbinden der JavaScript-Datei -->
     <script src="game.js"></script>
 </body>
 </html>
