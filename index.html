@@ -1,17 +1,27 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Color Match Game</title>
-    <script src="game.js" defer></script>
-    <link rel="stylesheet" href="styles.css"> <!-- Falls du CSS verwendest -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            text-align: center;
+        }
+
+        canvas {
+            display: block;
+            margin: 20px auto;
+            border: 2px solid #000;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Color Match Game</h1>
-        <p>Viel Spaß beim Spielen!</p>
-        <canvas id="gameCanvas" width="600" height="800"></canvas> <!-- Canvas für das Spiel -->
-    </div>
+    <h1>Color Match Game</h1>
+    <p>Viel Spaß beim Spielen!</p>
+    <canvas id="gameCanvas" width="600" height="800"></canvas>
+    <script src="game.js"></script>
 </body>
 </html>
